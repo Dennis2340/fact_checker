@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("SUPABASE_DATABASE_URL")
+  directUrl    = env("SUPABASE_DIRECT_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id        String     @id(map: "idx_User_PRIMARY") @unique(map: "idx_User_id_key") @db.VarChar(191)
+  name      String
+  email     String   @unique(map: "idx_User_email_key")
+  facts     Fact[]
+  votes     Vote[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Fact {
+  id         String     @id(map: "idx_Fact_PRIMARY") @unique(map: "idx_Fact_id_key") @db.VarChar(191)
+  content    String
+  sourceLink String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  votes      Vote[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Vote {
+  id        String     @id(map: "idx_Vote_PRIMARY") @unique(map: "idx_Vote_id_key") @db.VarChar(191)
+  value     Boolean 
+  userId    String
+  factId    String
+  user      User     @relation(fields: [userId], references: [id])
+  fact      Fact     @relation(fields: [factId], references: [id])
+  createdAt DateTime @default(now())
+}
