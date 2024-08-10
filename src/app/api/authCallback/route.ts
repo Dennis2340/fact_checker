@@ -2,7 +2,7 @@
 import { db } from '@/db';
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
-export default async function handler(req: Request, res: Response) {
+export async function GET(req: Request, res: Response) {
     try {
         const { getUser } = getKindeServerSession();
         const user = await getUser();
@@ -18,6 +18,7 @@ export default async function handler(req: Request, res: Response) {
         if (!dbUser) {
             await db.user.create({
                 data: {
+                    name: `${user.given_name} ${user.family_name}`,
                     id: user.id,
                     email: user.email,
                 },

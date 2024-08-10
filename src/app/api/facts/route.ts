@@ -9,14 +9,39 @@ export async function POST(req: Request) {
     const { getUser } = getKindeServerSession();
     const user = await getUser();
     const userId = user?.id;
+    const email = user?.email;
 
-    if (!userId) return new Response("Unauthorized", { status: 401 });
+    if (user && !userId && email) return new Response("Unauthorized", { status: 401 });
+
+    const dbUser = await db.user.findFirst({
+      where: {id: userId}
+    })
+    console.log("this is the dbUser: ", dbUser)
+    if(!dbUser) {
+      const userCreated = await db.user.create({
+        data: {
+            name: `${user?.given_name} ${user?.family_name}`,
+            id: user?.id!,
+            email: user?.email!,
+        },
+       });
+       console.log(userCreated)
+       const newFact = await db.fact.create({
+        data: {
+          content,
+          sourceLink,
+          user: { connect: { id: userCreated.id, email: userCreated.email } },
+
+        },
+      });
+      console.log(newFact)
+    }
 
     const newFact = await db.fact.create({
       data: {
         content,
         sourceLink,
-        user: { connect: { id: userId } },
+        user: { connect: { id: dbUser?.id } },
       },
     });
 

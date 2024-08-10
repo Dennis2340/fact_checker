@@ -24,29 +24,40 @@ export async function POST(req: Request) {
       },
     });
 
+    let voteResponse
     if (existingVote) {
       // If vote exists, update it
-      const updatedVote = await db.vote.update({
+      voteResponse = await db.vote.update({
         where: { id: existingVote.id },
         data: { value },
       });
-      return new Response(JSON.stringify(updatedVote), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
     } else {
-      const newVote = await db.vote.create({
+      // If no vote exists, create a new one
+      voteResponse = await db.vote.create({
         data: {
           value,
           user: { connect: { id: userId } },
           fact: { connect: { id: factId } },
         },
       });
-      return new Response(JSON.stringify(newVote), {
-        status: 201,
-        headers: { "Content-Type": "application/json" },
-      });
     }
+
+    // Send back the updated vote count
+    const updatedVotes = await db.vote.findMany({
+      where: { factId },
+    });
+
+    const trueVotes = updatedVotes.filter(vote => vote.value === true).length;
+    const falseVotes = updatedVotes.filter(vote => vote.value === false).length;
+
+    return new Response(
+      JSON.stringify({ trueVotes, falseVotes }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    
   } catch (error) {
     console.log(error);
     return new Response(

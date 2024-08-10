@@ -3,16 +3,24 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/button';
 import { Loader2, ArrowUpRight } from 'lucide-react';
+import Link from 'next/link';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 interface Fact {
-  id: string;
-  content: string;
-  sourceLink: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  votes: number;
-}
+    id: string;
+    content: string;
+    sourceLink: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+    trueVotes: number;
+    falseVotes: number;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+    };
+  }
 
 const mockFact: Fact = {
     id: "1",
@@ -21,13 +29,15 @@ const mockFact: Fact = {
     userId: "user123",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    votes: 42,
+    trueVotes: 42,
+    falseVotes: 2,
+    user: {id: "", name: "", email: ""}
 };
 const IndividualFacts = ({factId}: {factId:string}) => {
   const [fact, setFact] = useState<Fact | null>(mockFact);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isVoting, setIsVoting] = useState<boolean>(false);
-  const [voteCount, setVoteCount] = useState<number>(0);
+  const [isVotingTrue, setIsVotingTrue] = useState<boolean>(false);
+  const [isVotingFalse, setIsVotingFalse] = useState<boolean>(false);
   
 
   useEffect(() => {
@@ -37,7 +47,6 @@ const IndividualFacts = ({factId}: {factId:string}) => {
           const response = await fetch(`/api/facts/${factId}`);
           const data = await response.json();
           setFact(data);
-          setVoteCount(data.votes);
         } catch (error) {
           console.error('Error fetching fact details:', error);
         } finally {
@@ -51,23 +60,39 @@ const IndividualFacts = ({factId}: {factId:string}) => {
 
 
 
-  const handleVote = async () => {
+  const handleVote = async (voteValue: boolean) => {
     try {
-      setIsVoting(true);
-      const response = await fetch(`/api/facts/${factId}/vote`, {
+        if(voteValue){
+            setIsVotingTrue(true);
+        }else {
+            setIsVotingFalse(true);
+        }
+      const response = await fetch(`/api/votes`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ factId, value: voteValue }),
       });
+  
       if (response.ok) {
-        setVoteCount((prevCount) => prevCount + 1);
+        const data = await response.json();
+        setFact((prevFact) => prevFact && {
+          ...prevFact,
+          trueVotes: data.trueVotes,
+          falseVotes: data.falseVotes,
+        });
       } else {
         console.error('Failed to vote');
       }
     } catch (error) {
       console.error('Error voting:', error);
     } finally {
-      setIsVoting(false);
+      setIsVotingTrue(false);
+      setIsVotingFalse(false);
     }
   };
+  
 
   if (isLoading) {
     return <Loader2 className="animate-spin h-10 w-10 text-gray-800 mx-auto mt-20" />;
@@ -78,25 +103,39 @@ const IndividualFacts = ({factId}: {factId:string}) => {
   }
 
   return (
-    <main className="max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">{fact.content}</h1>
-      <p className="text-sm text-gray-500 mb-4">
-        Posted on: {new Date(fact.createdAt).toLocaleDateString()}
-      </p>
-      <div className="flex items-center justify-between mb-6">
-        <Button onClick={handleVote} disabled={isVoting}>
-          {isVoting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Vote'}
-        </Button>
-        <span className="text-gray-700">{voteCount} {voteCount === 1 ? 'Vote' : 'Votes'}</span>
+    <main className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <div className="flex items-center gap-4 mb-6">
+        <Avatar>
+          <AvatarImage src={`https://api.adorable.io/avatars/40/${fact.user.email}.png`} alt={fact.user.name} />
+          <AvatarFallback>{fact.user.name.charAt(0)}</AvatarFallback>
+        </Avatar>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">{fact.user.name}</h2>
+          <p className="text-sm text-gray-500">Posted on: {new Date(fact.createdAt).toLocaleDateString()}</p>
+        </div>
       </div>
-      <a
+      
+      <h1 className="text-3xl font-bold text-gray-900 mb-4">{fact.content}</h1>
+      <div className="flex items-center justify-between mb-6">
+        <Button onClick={() => handleVote(true)} disabled={isVotingTrue}>
+          {isVotingTrue? <Loader2 className="h-4 w-4 animate-spin" /> : 'True'}
+        </Button>
+        <Button onClick={() => handleVote(false)} disabled={isVotingFalse}>
+          {isVotingFalse ? <Loader2 className="h-4 w-4 animate-spin" /> : 'False'}
+        </Button>
+        <div className="flex items-center gap-4">
+          <span className="text-green-600">{fact.trueVotes} True Votes</span>
+          <span className="text-red-600">{fact.falseVotes} False Votes</span>
+        </div>
+      </div>
+      <Link
         href={fact.sourceLink}
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center text-blue-600 hover:underline"
       >
         View Source <ArrowUpRight className="ml-1 h-4 w-4" />
-      </a>
+      </Link>
     </main>
   );
 };

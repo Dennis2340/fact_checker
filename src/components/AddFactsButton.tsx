@@ -6,6 +6,7 @@ import { Textarea } from './ui/textarea';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Label } from './ui/label';
+import { useToast } from "@/components/ui/use-toast"
 
 interface Props {}
 
@@ -15,6 +16,8 @@ const AddFactsForm = () => {
     const [sourceLink, setSourceLink] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+
+    const { toast } = useToast()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,17 +35,26 @@ const AddFactsForm = () => {
     
           if (!response.ok) {
             throw new Error('Failed to submit the fact.');
+          }else {
+            toast({
+                title: "Fact Submitted",
+              })
           }
     
         } catch (error: any) {
           setError(error.message);
+          toast({
+            title: "Error Occured",
+            description: "try again",
+            variant: "destructive"
+          })
         } finally {
           setIsSubmitting(false);
         }
       };
     
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form className="space-y-6">
         <div>
         <Label htmlFor="content" className="text-gray-700">
             Fact Content
@@ -75,11 +87,11 @@ const AddFactsForm = () => {
        {error && <p className="text-red-600">{error}</p>}
 
         <Button
-        type="submit"
-        className="w-full bg-blue-600 text-white"
+        className="w-full"
         disabled={isSubmitting}
+        onClick={handleSubmit}
         >
-        {isSubmitting ? 'Submitting...' : 'Submit Fact'}
+        {isSubmitting ? <Loader2 className='w-4 h-4 animate-spin'/> : 'Submit Fact'}
         </Button>
   </form>
 
