@@ -1,7 +1,6 @@
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { RegisterLink } from "@kinde-oss/kinde-auth-nextjs";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import {RegisterLink ,getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,10 +20,10 @@ export default async function Home() {
         </p>
 
           {!user ?<>
-          {/* <RegisterLink className={
+          <RegisterLink className={
             buttonVariants({ size: "lg", className: "mt-5"})}>
             Get Started <ArrowRight className='ml-1.5 h-5 w-5'/>
-          </RegisterLink> */}
+          </RegisterLink>
         </>: <>
         <Link className={buttonVariants({
           size: "lg",
@@ -35,7 +34,7 @@ export default async function Home() {
         </>}
       </MaxWidthWrapper>
 
-      <div className="mx-auto mt-32 max-w-5xl sm:mt-56">
+      <div className="mx-auto mt-32 max-w-5xl sm:mt-26">
         <div className="mb-12 px-6 lg:px-8">
           <div className="mx-auto max-w-2xl sm:text-center">
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
