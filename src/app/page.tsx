@@ -1,12 +1,17 @@
 import MaxWidthWrapper from "@/components/MaxWidthWrapper";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { RegisterLink } from "@kinde-oss/kinde-auth-nextjs";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function Home() {
+export default async function Home() {
+  const { getUser } = getKindeServerSession()
+  const user = await getUser()
+
   return (
-<>
+    <>
       <MaxWidthWrapper className="mb-12 mt-28 sm:mt-40 flex flex-col items-center justify-center text-center">
         <h1 className="max-w-4xl text-5xl font-bold md:text-6xl lg:text-7xl">
           Discover the Truth with <span className="text-blue-500">FactCheck</span>
@@ -15,15 +20,19 @@ export default function Home() {
           Post facts, vote on their authenticity, and join a community dedicated to verifying the truth.
         </p>
 
-        <Link
-          className={buttonVariants({
-            size: "lg",
-            className: "mt-5",
-          })}
-          href="/get-started"
-        >
-          Get Started <ArrowRight className="ml-2 h-5 w-5" />
+          {!user ?<>
+          {/* <RegisterLink className={
+            buttonVariants({ size: "lg", className: "mt-5"})}>
+            Get Started <ArrowRight className='ml-1.5 h-5 w-5'/>
+          </RegisterLink> */}
+        </>: <>
+        <Link className={buttonVariants({
+          size: "lg",
+          className: "mt-5"
+        })} href="/dashboard">
+          Dashboard <ArrowRight className="ml-2 h-5 w-5"/>
         </Link>
+        </>}
       </MaxWidthWrapper>
 
       <div className="mx-auto mt-32 max-w-5xl sm:mt-56">
